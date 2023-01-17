@@ -1,0 +1,1 @@
+Root bean: class [JpaRepositoryFactoryBean] defined in interview.elfintech.repository.elastic.domain.DomainDao defined in @EnableJpaRepositories declared on JpaRepositoriesRegistrar.EnableJpaRepositoriesConfiguration] for bean 'domainDao': There is already [Root bean: class [ElasticsearchRepositoryFactoryBean]; defined in  defined in @EnableElasticsearchRepositories declared on 

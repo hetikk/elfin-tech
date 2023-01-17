@@ -1,0 +1,49 @@
+version: '3.7'
+
+volumes:
+  postgres:
+  elasticsearch:
+  app:
+
+networks:
+  network:
+
+services:
+  postgres:
+    image: "postgres"
+    container_name: "interview-postgres"
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: "interview"
+      POSTGRES_PASSWORD: "interview"
+      POSTGRES_DB: "interview"
+    volumes:
+      - "postgres:/var/lib/postgresql/data"
+    networks:
+      - network
+
+  elasticsearch:
+    image: "docker.elastic.co/elasticsearch/elasticsearch:7.9.2"
+    container_name: "interview-elasticsearch"
+    volumes:
+         - "elasticsearch:/usr/share/elasticsearch/data/"
+    ports:
+      - "9200:9200"
+    environment:
+      - 'ES_JAVA_OPTS=-Xms1024m -Xmx1024m'
+      - 'discovery.type=single-node'
+    networks:
+      - network
+
+  app:
+    image: "interview-app:1"
+    container_name: "interview-app"
+
+    ports:
+      - "8080:8080"
+    networks:
+      - network
+    depends_on:
+      - postgres
+      - elasticsearch

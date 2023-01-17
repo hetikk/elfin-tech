@@ -1,38 +1,129 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" id="Definitions_0fr9mxs" targetNamespace="http://bpmn.io/schema/bpmn">
-  <bpmn:process id="elfin-tech-process" isExecutable="true">
-    <bpmn:startEvent id="StartEvent_1">
-      <bpmn:outgoing>SequenceFlow_1fp17al</bpmn:outgoing>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" id="Definitions_1vtaczm" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="5.7.0">
+  <bpmn:process id="registration-process" name="Elfin Tech Interview" isExecutable="true" camunda:versionTag="1.0.0">
+    <bpmn:startEvent id="Event_1blmurm">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="email" label="Email" type="string" />
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:outgoing>Flow_0xzukj6</bpmn:outgoing>
     </bpmn:startEvent>
-    <bpmn:sequenceFlow id="SequenceFlow_1fp17al" sourceRef="StartEvent_1" targetRef="say-hello" />
-    <bpmn:endEvent id="EndEvent_0x6ir2l">
-      <bpmn:incoming>SequenceFlow_16gzt2m</bpmn:incoming>
-    </bpmn:endEvent>
-    <bpmn:sequenceFlow id="SequenceFlow_16gzt2m" sourceRef="say-hello" targetRef="EndEvent_0x6ir2l" />
-    <bpmn:userTask id="say-hello" name="Say hello to&#10;demo" camunda:candidateUsers="demo">
-      <bpmn:incoming>SequenceFlow_1fp17al</bpmn:incoming>
-      <bpmn:outgoing>SequenceFlow_16gzt2m</bpmn:outgoing>
+    <bpmn:sequenceFlow id="Flow_0xzukj6" sourceRef="Event_1blmurm" targetRef="Activity_0jckmbu" />
+    <bpmn:serviceTask id="Activity_0jckmbu" name="Регистрация" camunda:delegateExpression="${registerNewUserDelegate}">
+      <bpmn:incoming>Flow_0xzukj6</bpmn:incoming>
+      <bpmn:outgoing>Flow_1g60uj0</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:boundaryEvent id="Event_03vgtdh" attachedToRef="Activity_0jckmbu">
+      <bpmn:outgoing>Flow_0b3ny2t</bpmn:outgoing>
+      <bpmn:errorEventDefinition id="ErrorEventDefinition_0gks08a" camunda:errorCodeVariable="availableEmailDomainError" />
+    </bpmn:boundaryEvent>
+    <bpmn:sequenceFlow id="Flow_1g60uj0" sourceRef="Activity_0jckmbu" targetRef="Activity_0tv0ktt" />
+    <bpmn:exclusiveGateway id="Gateway_0hf3j5q">
+      <bpmn:incoming>Flow_04qxr7v</bpmn:incoming>
+      <bpmn:outgoing>Flow_0lcf52i</bpmn:outgoing>
+      <bpmn:outgoing>Flow_1iqdsj3</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sequenceFlow id="Flow_04qxr7v" sourceRef="Activity_1g62jde" targetRef="Gateway_0hf3j5q" />
+    <bpmn:sequenceFlow id="Flow_0b3ny2t" name="домен отсутствует в справочнике" sourceRef="Event_03vgtdh" targetRef="Activity_1g62jde" />
+    <bpmn:sendTask id="Activity_0tv0ktt" name="Отправка сообщения об успешной регистрации" camunda:delegateExpression="${sendSuccessfulEmailDelegate}">
+      <bpmn:incoming>Flow_1g60uj0</bpmn:incoming>
+      <bpmn:incoming>Flow_0lcf52i</bpmn:incoming>
+      <bpmn:outgoing>Flow_0lx39yz</bpmn:outgoing>
+    </bpmn:sendTask>
+    <bpmn:userTask id="Activity_1g62jde" name="Подтверждение домена">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="email" label="Email пользователя" type="string">
+            <camunda:properties />
+            <camunda:validation />
+          </camunda:formField>
+          <camunda:formField id="emailConfirmed" label="Потдтвердить регистрацию?" type="boolean" />
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_0b3ny2t</bpmn:incoming>
+      <bpmn:outgoing>Flow_04qxr7v</bpmn:outgoing>
     </bpmn:userTask>
+    <bpmn:sequenceFlow id="Flow_0lcf52i" name="email принят" sourceRef="Gateway_0hf3j5q" targetRef="Activity_0tv0ktt">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${emailConfirmed}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sendTask id="Activity_03oyk33" name="Отправка сообщения об отклонении регистрации" camunda:delegateExpression="${sendFailedEmailDelegate}">
+      <bpmn:incoming>Flow_1iqdsj3</bpmn:incoming>
+    </bpmn:sendTask>
+    <bpmn:sequenceFlow id="Flow_1iqdsj3" name="email отклонен" sourceRef="Gateway_0hf3j5q" targetRef="Activity_03oyk33">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${!emailConfirmed}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:endEvent id="Event_1hfevoa">
+      <bpmn:incoming>Flow_0lx39yz</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_0lx39yz" sourceRef="Activity_0tv0ktt" targetRef="Event_1hfevoa" />
   </bpmn:process>
   <bpmndi:BPMNDiagram id="BPMNDiagram_1">
-    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="elfin-tech-process">
-      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
-        <dc:Bounds x="179" y="99" width="36" height="36" />
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="registration-process">
+      <bpmndi:BPMNShape id="Event_1blmurm_di" bpmnElement="Event_1blmurm">
+        <dc:Bounds x="152" y="102" width="36" height="36" />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNEdge id="SequenceFlow_1fp17al_di" bpmnElement="SequenceFlow_1fp17al">
-        <di:waypoint x="215" y="117" />
-        <di:waypoint x="270" y="117" />
+      <bpmndi:BPMNShape id="Activity_08h60vs_di" bpmnElement="Activity_0jckmbu">
+        <dc:Bounds x="320" y="80" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_0hf3j5q_di" bpmnElement="Gateway_0hf3j5q" isMarkerVisible="true">
+        <dc:Bounds x="475" y="275" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0fpi2wa_di" bpmnElement="Activity_0tv0ktt">
+        <dc:Bounds x="590" y="80" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0wo8fgc_di" bpmnElement="Activity_03oyk33">
+        <dc:Bounds x="450" y="400" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_02jloes_di" bpmnElement="Activity_1g62jde">
+        <dc:Bounds x="320" y="260" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_1hfevoa_di" bpmnElement="Event_1hfevoa">
+        <dc:Bounds x="782" y="102" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_1x9f2rb_di" bpmnElement="Event_03vgtdh">
+        <dc:Bounds x="372" y="142" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_0xzukj6_di" bpmnElement="Flow_0xzukj6">
+        <di:waypoint x="188" y="120" />
+        <di:waypoint x="320" y="120" />
       </bpmndi:BPMNEdge>
-      <bpmndi:BPMNShape id="EndEvent_0x6ir2l_di" bpmnElement="EndEvent_0x6ir2l">
-        <dc:Bounds x="432" y="99" width="36" height="36" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNEdge id="SequenceFlow_16gzt2m_di" bpmnElement="SequenceFlow_16gzt2m">
-        <di:waypoint x="370" y="117" />
-        <di:waypoint x="432" y="117" />
+      <bpmndi:BPMNEdge id="Flow_1g60uj0_di" bpmnElement="Flow_1g60uj0">
+        <di:waypoint x="420" y="120" />
+        <di:waypoint x="590" y="120" />
       </bpmndi:BPMNEdge>
-      <bpmndi:BPMNShape id="UserTask_08mft2c_di" bpmnElement="say-hello">
-        <dc:Bounds x="270" y="77" width="100" height="80" />
-      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_04qxr7v_di" bpmnElement="Flow_04qxr7v">
+        <di:waypoint x="420" y="300" />
+        <di:waypoint x="475" y="300" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0lcf52i_di" bpmnElement="Flow_0lcf52i">
+        <di:waypoint x="525" y="300" />
+        <di:waypoint x="640" y="300" />
+        <di:waypoint x="640" y="160" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="547" y="282" width="65" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1iqdsj3_di" bpmnElement="Flow_1iqdsj3">
+        <di:waypoint x="500" y="325" />
+        <di:waypoint x="500" y="400" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="511" y="353" width="77" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0b3ny2t_di" bpmnElement="Flow_0b3ny2t">
+        <di:waypoint x="390" y="178" />
+        <di:waypoint x="390" y="214" />
+        <di:waypoint x="370" y="214" />
+        <di:waypoint x="370" y="260" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="295" y="194" width="69" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0lx39yz_di" bpmnElement="Flow_0lx39yz">
+        <di:waypoint x="690" y="120" />
+        <di:waypoint x="782" y="120" />
+      </bpmndi:BPMNEdge>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>
 </bpmn:definitions>
