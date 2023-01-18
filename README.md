@@ -1,1 +1,20 @@
-Root bean: class [JpaRepositoryFactoryBean] defined in interview.elfintech.repository.elastic.domain.DomainDao defined in @EnableJpaRepositories declared on JpaRepositoriesRegistrar.EnableJpaRepositoriesConfiguration] for bean 'domainDao': There is already [Root bean: class [ElasticsearchRepositoryFactoryBean]; defined in  defined in @EnableElasticsearchRepositories declared on 
+Camunda schema: `src/main/resources/process.bpmn`  
+
+Run command `make start-all` to start project.   
+Open http://localhost:8080 (`demo` / `demo`)  
+Sent request:
+```
+curl --location --request POST 'localhost:8080/engine-rest/process-definition/key/registration-process/start' \
+--header 'Content-Type: application/json' \
+--data-raw '{
+    "variables": {
+        "email": {
+            "value": "EMAIL_TO_REGISTRATION",
+            "type": "String"
+        }
+    }
+}'
+```
+
+
+
